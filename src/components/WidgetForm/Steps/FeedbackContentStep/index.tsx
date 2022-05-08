@@ -3,7 +3,8 @@ import { FormEvent, useState } from "react";
 import { feedbackTypes, FeedbackTypes } from "../..";
 import { CloneWidgetButton } from "../../../CloseWidgetButton";
 import { ScreenshotButton } from "../../ScreenshotButton";
-
+import { api } from '../../../../../services/api'
+import { Loader } from "../../../Loader";
 type FeedbackTypeStepProps = {
   feedbackType: FeedbackTypes;
   handleRestartFeedback: () => void;
@@ -12,11 +13,21 @@ type FeedbackTypeStepProps = {
 export function FeedbackContentStep({feedbackType, handleRestartFeedback, onFeedbackSent}:FeedbackTypeStepProps) {
   const [screenshot, setScreenshot] = useState<string | null>(null)
   const [comment, setComment] = useState<string>('');
+  const [isSending, setIsSending] = useState<boolean>(false)
     
   const feedbackTypeInfo = feedbackTypes[feedbackType];
 
-  const handleSubmit = (event:FormEvent) => {
+   const handleSubmit = async (event:FormEvent) => {
     event.preventDefault();
+    setIsSending(true)
+    const response = await api.post('/feedbacks', {
+      type: feedbackType,
+      comment,
+      screenshot,
+    })
+
+    setIsSending(false)
+
     onFeedbackSent()
   }
   return(
@@ -61,9 +72,12 @@ export function FeedbackContentStep({feedbackType, handleRestartFeedback, onFeed
            focus:ring-brand-500 transition-colors
            disabled:opacity-50 disabled:hover:bg-brand-500"
           type="submit"
-          disabled={comment.length===0}
+          disabled={comment.length===0 || isSending}
           >
-            Enviar Feedback
+            { isSending 
+            ? <Loader />
+            : "Enviar Feedback"
+          }
           </button>
         </footer>
       </form>
